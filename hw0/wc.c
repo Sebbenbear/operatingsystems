@@ -71,9 +71,9 @@ int main(int argc, char *argv[]) {
         free(fileName); // releases the memory for the fileName
     }
 
-    printf("%d", totalNewLineCount); // prints the total number of characters in the file
-    printf("%d", totalWordCount); // prints the total number of characters in the file
-    printf("%d", totalCharacterCount); // prints the total number of characters in the file
+    printf("%4d", totalNewLineCount); // prints the total number of characters in the file
+    printf("%5d", totalWordCount); // prints the total number of characters in the file
+    printf("%5d", totalCharacterCount); // prints the total number of characters in the file
     printf("%s\n", "total"); // prints the first argument (file name)
 
     return 0;
