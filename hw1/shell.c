@@ -9,11 +9,22 @@
 #include <sys/wait.h> // 
 #include <termios.h>
 #include <unistd.h>
-
+#include <dirent.h>
 #include "tokenizer.h"
 
 /* Convenience macro to silence compiler warnings about unused function parameters. */
 #define unused __attribute__((unused))
+
+
+// TODO: MAKE A DISCO SHELL - NOT FOR PEOPLE SENSITIVE TO FLASHING LIGHTS
+#define RED   "\x1B[31m" // define the color for the terminal
+#define RESET "\x1B[0m" // reset back to the normal color
+#define GRN   "\x1B[32m"
+#define YEL   "\x1B[33m"
+#define BLU   "\x1B[34m"
+#define MAG   "\x1B[35m"
+#define CYN   "\x1B[36m"
+#define WHT   "\x1B[37m"
 
 /* Whether the shell is connected to an actual terminal or not. */
 bool shell_is_interactive;
@@ -31,6 +42,7 @@ pid_t shell_pgid;
 int cmd_exit(struct tokens *tokens);
 int cmd_help(struct tokens *tokens);
 int cmd_pwd(struct tokens *tokens);
+int cmd_cd(struct tokens *tokens);
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(struct tokens *tokens);
@@ -46,6 +58,7 @@ fun_desc_t cmd_table[] = {
   {cmd_help, "?", "show this help menu"},
   {cmd_exit, "exit", "exit the command shell"},
   {cmd_pwd, "pwd", "print the working directory"},
+  {cmd_cd, "cd", "change the working directory"},
 };
 
 /* Prints a helpful description for the given command */
@@ -66,7 +79,29 @@ int cmd_exit(unused struct tokens *tokens) {
 */
 int cmd_pwd(unused struct tokens *tokens) { // if the token isn't used, compiler won't complain
   char cwd[1024]; // create a buffer up to 1024 bytes
-  printf("%s\n", getcwd(cwd, sizeof(cwd))); // pass in the command, which uses the buffer and the size of the buffer and stores the result in the buffer
+  printf(RED "%s\n" RESET, getcwd(cwd, sizeof(cwd))); // pass in the command, which uses the buffer and the size of the buffer and stores the result in the buffer
+  return 1;
+}
+
+int cmd_cd(struct tokens *tokens) {
+  // // check the number of arguments is correct
+  int number_of_tokens = tokens_get_length(tokens);
+  if (number_of_tokens != 2) {
+    printf("%s\n", "You need to specify which directory to cd into.");
+    return 1;
+  }
+
+  char *directory_path = tokens_get_token(tokens, 1);
+
+  // check that it's a valid directory to cd into
+  DIR *dir = opendir(directory_path);
+  if (dir) {
+    printf("Changing to %s\n", directory_path);
+    closedir(dir);
+    chdir(directory_path);
+  } else {
+    printf("%s\n", "That directory doesn't exist.");
+  }
   return 1;
 }
 
