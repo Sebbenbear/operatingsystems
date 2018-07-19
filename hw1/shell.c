@@ -44,6 +44,9 @@ int cmd_help(struct tokens *tokens);
 int cmd_pwd(struct tokens *tokens);
 int cmd_cd(struct tokens *tokens);
 
+/* Helper functions */
+bool is_valid_directory(char *directory_path);
+
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(struct tokens *tokens);
 
@@ -60,6 +63,16 @@ fun_desc_t cmd_table[] = {
   {cmd_pwd, "pwd", "print the working directory"},
   {cmd_cd, "cd", "change the working directory"},
 };
+
+bool is_valid_directory(char *directory_path) {
+  DIR *dir = opendir(directory_path);
+  if (dir) {
+    closedir(dir);
+    return true;
+  } else {
+    return false;
+  }
+}
 
 /* Prints a helpful description for the given command */
 int cmd_help(unused struct tokens *tokens) {
@@ -93,11 +106,8 @@ int cmd_cd(struct tokens *tokens) {
 
   char *directory_path = tokens_get_token(tokens, 1);
 
-  // check that it's a valid directory to cd into
-  DIR *dir = opendir(directory_path);
-  if (dir) {
+  if (is_valid_directory(directory_path)) {
     printf("Changing to %s\n", directory_path);
-    closedir(dir);
     chdir(directory_path);
   } else {
     printf("%s\n", "That directory doesn't exist.");
@@ -161,6 +171,9 @@ int main(unused int argc, unused char *argv[]) {
     } else {
       /* REPLACE this to run commands as programs. */
       fprintf(stdout, "This shell doesn't know how to run programs.\n");
+      // if the lookup for commands files
+      //char *path = 
+
     }
 
     if (shell_is_interactive)
