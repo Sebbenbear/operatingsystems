@@ -1,12 +1,12 @@
-#include <ctype.h>
-#include <errno.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <signal.h>
-#include <sys/wait.h>
+#include <ctype.h> // character operations, like uppercase/lowercase/encoding
+#include <errno.h> // test for error codes
+#include <stdbool.h> // defines booleans so you don't need to use ints all the time
+#include <stdio.h> // Core input/output functions
+#include <stdlib.h> // memory allocation, process ctrl, random numbers, number conversions
+#include <string.h> // copy, concat, tokenize and other string operations found here
+#include <sys/types.h> // gives you nice data types for managing OS concepts
+#include <signal.h> // provides methods for dealing with signals (the handlers for interrupts)
+#include <sys/wait.h> // 
 #include <termios.h>
 #include <unistd.h>
 
@@ -27,8 +27,10 @@ struct termios shell_tmodes;
 /* Process group id for the shell */
 pid_t shell_pgid;
 
+/* Define the functions in the program*/
 int cmd_exit(struct tokens *tokens);
 int cmd_help(struct tokens *tokens);
+int cmd_pwd(struct tokens *tokens);
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(struct tokens *tokens);
@@ -43,6 +45,7 @@ typedef struct fun_desc {
 fun_desc_t cmd_table[] = {
   {cmd_help, "?", "show this help menu"},
   {cmd_exit, "exit", "exit the command shell"},
+  {cmd_pwd, "pwd", "print the working directory"},
 };
 
 /* Prints a helpful description for the given command */
@@ -55,6 +58,16 @@ int cmd_help(unused struct tokens *tokens) {
 /* Exits this shell */
 int cmd_exit(unused struct tokens *tokens) {
   exit(0);
+}
+
+/* Prints the current working directory 
+  // From unistd.h, pass in a buffer and the size of the buffer
+  // char *getcwd(char *buf, size_t size);
+*/
+int cmd_pwd(unused struct tokens *tokens) { // if the token isn't used, compiler won't complain
+  char cwd[1024]; // create a buffer up to 1024 bytes
+  printf("%s\n", getcwd(cwd, sizeof(cwd))); // pass in the command, which uses the buffer and the size of the buffer and stores the result in the buffer
+  return 1;
 }
 
 /* Looks up the built-in command, if it exists. */

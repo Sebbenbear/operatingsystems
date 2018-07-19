@@ -33,28 +33,24 @@ int main(int argc, char *argv[]) {
 
             // if it's the end of file character, break the loop
             if (feof(fp)) { // if it's the eof character, break
-                //wordCount++;
                 break;
             }
 
-            // if it's white space, only increment the number of characters
-            if (c == ' ' || c == '\t' || c == '\r' || c == '\n') { // keep a list of whitespace characters in a set for faster access later
-                if (c == '\n') {
+            if (c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\v') { // keep a list of whitespace characters in a set for faster access later
+                if (c == '\n' || c == '\r' || c == '\n') {
                     newLineCount++;
                 }
                 if (!isWhiteSpace) {
-                    // then we have finished a word
                     isWhiteSpace = 1;
                 }
-            } else { // otherwise it's not whitespace and is considered a word
+            } else {
                 if (isWhiteSpace) {
-                    // then we are now starting a word
                     wordCount++;
                     isWhiteSpace = 0;
                 }
             }
 
-            characterCount++; // increment character count in all cases
+            characterCount++;
         }
 
         totalNewLineCount += newLineCount;
