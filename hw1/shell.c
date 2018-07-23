@@ -15,7 +15,6 @@
 /* Convenience macro to silence compiler warnings about unused function parameters. */
 #define unused __attribute__((unused))
 
-
 // TODO: MAKE A DISCO SHELL - NOT FOR PEOPLE SENSITIVE TO FLASHING LIGHTS
 #define RED   "\x1B[31m" // define the color for the terminal
 #define RESET "\x1B[0m" // reset back to the normal color
@@ -43,6 +42,7 @@ int cmd_exit(struct tokens *tokens);
 int cmd_help(struct tokens *tokens);
 int cmd_pwd(struct tokens *tokens);
 int cmd_cd(struct tokens *tokens);
+int execute_program(struct tokens *tokens);
 
 /* Helper functions */
 bool is_valid_directory(char *directory_path);
@@ -115,6 +115,65 @@ int cmd_cd(struct tokens *tokens) {
   return 1;
 }
 
+void get_arguments(struct tokens *tokens, char **arguments) {
+  int number_of_tokens = tokens_get_length(tokens); 
+
+  int i;
+  for (i = 0; i < number_of_tokens; i++) {
+    arguments[i] = tokens_get_token(tokens, i);
+  }
+  arguments[number_of_tokens] = NULL;
+}
+
+//     /usr/bin/wc shell.c
+int execute_program(struct tokens *tokens) {
+
+  if (tokens_get_length(tokens) < 1) {
+    return 1;
+  }
+  
+  char *directory_path = tokens_get_token(tokens, 0);
+
+  // can't use this - only considers file paths that are directories
+  // if (!is_valid_directory(directory_path)) {
+  //   printf("%s\n", "That path is not valid.");
+  //   return 1;
+  // }
+  
+  // printf("%s\n", "getting pid");
+
+  pid_t cpid, status; // set up the pids for the child and parent processes
+  
+  //pid_t cpid, mypid, tcpid;
+  //mypid = getpid();
+
+  cpid = fork();
+  if (cpid > 0) {         // if it's not the parent process
+      // wait(&status);				/* Wait for child process to end */
+      wait(&status);
+      // printf("Child is done executing %d\n", tcpid);
+  } else if (cpid == 0) { // if it's a child process
+
+      // if you knew how many arguments in advance you had, use this
+      // int result = execl(directory_path, tokens_get_token(tokens, 1), (char *) NULL);
+
+      char *arguments[tokens_get_length(tokens) + 1]; // Plus 1 for NULL space, containers pointers to other strings
+      get_arguments(tokens, arguments);
+
+      int result = execv(directory_path, arguments);
+      if (result == -1) {
+        printf("Program did not execute correctly\n");
+      }
+      // printf("[%d] child\n", mypid); // print the current pid, and the childs pid
+  } else {
+      perror("Fork failed\n"); // when would this fail?
+      exit(1);
+  }
+  // printf("[%d] DONE\n", mypid); // print the current pid
+  return 1;
+
+}
+
 /* Looks up the built-in command, if it exists. */
 int lookup(char cmd[]) {
   for (unsigned int i = 0; i < sizeof(cmd_table) / sizeof(fun_desc_t); i++)
@@ -170,10 +229,8 @@ int main(unused int argc, unused char *argv[]) {
       cmd_table[fundex].fun(tokens);
     } else {
       /* REPLACE this to run commands as programs. */
-      fprintf(stdout, "This shell doesn't know how to run programs.\n");
-      // if the lookup for commands files
-      //char *path = 
-
+      // fprintf(stdout, "This shell doesn't know how to run programs.\n");
+      execute_program(tokens);
     }
 
     if (shell_is_interactive)
