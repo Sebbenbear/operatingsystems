@@ -11,6 +11,8 @@
 #include <unistd.h>
 #include <dirent.h>
 #include "tokenizer.h"
+#include <sys/stat.h>
+#include <limits.h>
 
 /* Convenience macro to silence compiler warnings about unused function parameters. */
 #define unused __attribute__((unused))
@@ -43,6 +45,7 @@ int cmd_help(struct tokens *tokens);
 int cmd_pwd(struct tokens *tokens);
 int cmd_cd(struct tokens *tokens);
 int execute_program(struct tokens *tokens);
+int file_exists(char *filename);
 
 /* Helper functions */
 bool is_valid_directory(char *directory_path);
@@ -72,6 +75,12 @@ bool is_valid_directory(char *directory_path) {
   } else {
     return false;
   }
+}
+
+int file_exists(char *filename)
+{
+  struct stat buffer;
+  return (stat (filename, &buffer) == 0);
 }
 
 /* Prints a helpful description for the given command */
@@ -126,6 +135,7 @@ void get_arguments(struct tokens *tokens, char **arguments) {
 }
 
 //     /usr/bin/wc shell.c
+//     /usr/bin/
 int execute_program(struct tokens *tokens) {
 
   if (tokens_get_length(tokens) < 1) {
@@ -139,6 +149,45 @@ int execute_program(struct tokens *tokens) {
   //   printf("%s\n", "That path is not valid.");
   //   return 1;
   // }
+
+  // get the directory of the cv
+  char concatPath[PATH_MAX];
+  if (*directory_path == '.') { // dereference to get the first path
+    char* path = getenv("PATH");
+    char* token;
+    
+    while ((token = strsep(&path, ":"))) {
+      strcpy(concatPath, token);
+      strcat(concatPath, directory_path + 1);
+      if (file_exists(concatPath)) {
+        // we found it!
+        printf("%s\n", concatPath);
+        break;
+      }
+    } 
+  } else if (*directory_path == '/' && file_exists(directory_path)) {
+    printf("we're good to go!");
+    strcpy(concatPath, directory_path);
+  }
+
+  // if (file_exists(directory_path)) {
+  //   printf("exists!");
+  // } else {
+  //   printf("doesn't exist! checking path now...");
+    //bool file_found = false;
+    
+    // do {
+    //   // if there's no more paths, exit early
+
+    //   // otherwise get the next path to check it
+        
+
+    // } while (!file_found);
+  //}
+
+
+
+
   
   // printf("%s\n", "getting pid");
 
@@ -160,7 +209,7 @@ int execute_program(struct tokens *tokens) {
       char *arguments[tokens_get_length(tokens) + 1]; // Plus 1 for NULL space, containers pointers to other strings
       get_arguments(tokens, arguments);
 
-      int result = execv(directory_path, arguments);
+      int result = execv(concatPath, arguments);
       if (result == -1) {
         printf("Program did not execute correctly\n");
       }
